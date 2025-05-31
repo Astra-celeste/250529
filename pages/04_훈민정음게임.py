@@ -118,3 +118,16 @@ if submitted and not st.session_state.game_over:
 if st.session_state.used_words:
     st.markdown("### 사용된 단어")
     st.write(", ".join(st.session_state.used_words))
+
+if not all_chosungs:
+    st.error("유효한 단어가 포함된 dictionary.txt 파일이 필요합니다. 최소 하나 이상의 2글자 한글 단어를 추가해주세요.")
+    st.stop()
+
+dictionary = load_dictionary()
+word_dict = make_word_dict(dictionary)
+all_chosungs = list(word_dict.keys())
+
+# ✅ 예외 처리
+if not all_chosungs:
+    st.error("유효한 단어가 포함된 dictionary.txt 파일이 필요합니다. 최소 하나 이상의 2글자 한글 단어를 추가해주세요.")
+    st.stop()
