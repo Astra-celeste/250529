@@ -1,60 +1,72 @@
 import streamlit as st
 import random
 
-st.set_page_config(page_title="중3 영어 단어 퀴즈", page_icon="📝")
+st.set_page_config(page_title="고1 영어 단어 퀴즈", page_icon="📚")
 
-st.title("📝 중3 영어 단어 퀴즈")
+st.title("📚 고1 영어 단어 퀴즈")
 st.subheader("뜻을 보고 알맞은 영어 단어를 골라보세요!")
 
-# 중3 수준 영어 단어 데이터
+# 고1 수준 영어 단어 데이터
 quiz_data = [
-    {"word": "environment", "meaning": "환경"},
-    {"word": "experiment", "meaning": "실험"},
-    {"word": "volunteer", "meaning": "자원봉사자"},
-    {"word": "success", "meaning": "성공"},
-    {"word": "disease", "meaning": "질병"},
-    {"word": "history", "meaning": "역사"},
-    {"word": "temperature", "meaning": "온도"},
-    {"word": "education", "meaning": "교육"},
-    {"word": "invention", "meaning": "발명"},
-    {"word": "celebration", "meaning": "축하"},
-    {"word": "pollution", "meaning": "오염"},
-    {"word": "energy", "meaning": "에너지"},
-    {"word": "accident", "meaning": "사고"},
-    {"word": "direction", "meaning": "방향"},
-    {"word": "population", "meaning": "인구"}
+    {"word": "analyze", "meaning": "분석하다"},
+    {"word": "culture", "meaning": "문화"},
+    {"word": "confident", "meaning": "자신감 있는"},
+    {"word": "effort", "meaning": "노력"},
+    {"word": "explain", "meaning": "설명하다"},
+    {"word": "solution", "meaning": "해결책"},
+    {"word": "variety", "meaning": "다양성"},
+    {"word": "opinion", "meaning": "의견"},
+    {"word": "curious", "meaning": "호기심 많은"},
+    {"word": "develop", "meaning": "발전시키다"},
+    {"word": "behavior", "meaning": "행동"},
+    {"word": "opportunity", "meaning": "기회"},
+    {"word": "responsibility", "meaning": "책임"},
+    {"word": "technology", "meaning": "기술"},
+    {"word": "environment", "meaning": "환경"}
 ]
 
-# 퀴즈 인덱스 초기화
-if "quiz_index" not in st.session_state:
-    st.session_state.quiz_index = random.randint(0, len(quiz_data)-1)
+# 새로운 문제 불러오기
+def get_new_quiz():
+    question = random.choice(quiz_data)
+    correct_word = question["word"]
+    meaning = question["meaning"]
+    
+    options = [correct_word]
+    while len(options) < 4:
+        choice = random.choice(quiz_data)["word"]
+        if choice not in options:
+            options.append(choice)
+    random.shuffle(options)
+    
+    return meaning, correct_word, options
 
-# 퀴즈 출제
-current = quiz_data[st.session_state.quiz_index]
-correct_word = current["word"]
-meaning = current["meaning"]
-
-# 보기 구성
-options = [correct_word]
-while len(options) < 4:
-    choice = random.choice(quiz_data)["word"]
-    if choice not in options:
-        options.append(choice)
-random.shuffle(options)
+# 세션 상태 초기화
+if "answered" not in st.session_state:
+    st.session_state.answered = False
+if "current_meaning" not in st.session_state:
+    meaning, correct_word, options = get_new_quiz()
+    st.session_state.current_meaning = meaning
+    st.session_state.correct_word = correct_word
+    st.session_state.options = options
 
 # 문제 표시
-st.markdown(f"### ❓ 단어의 뜻: `{meaning}`")
-answer = st.radio("정답을 골라보세요:", options)
+st.markdown(f"### ❓ 단어의 뜻: `{st.session_state.current_meaning}`")
+answer = st.radio("정답을 골라보세요:", st.session_state.options)
 
-# 정답 확인
-if st.button("✅ 정답 확인"):
-    if answer == correct_word:
+# 정답 확인 버튼
+if st.button("✅ 정답 확인") and not st.session_state.answered:
+    st.session_state.answered = True
+    if answer == st.session_state.correct_word:
         st.success("🎉 정답입니다! 잘했어요!")
         st.balloons()
     else:
-        st.error(f"❌ 아쉬워요! 정답은 **{correct_word}** 입니다.")
+        st.error(f"❌ 오답입니다. 정답은 **{st.session_state.correct_word}** 입니다.")
 
-    # 다음 문제 버튼
-    if st.button("🔄 다음 문제"):
-        st.session_state.quiz_index = random.randint(0, len(quiz_data)-1)
-        st.experimental_rerun()
+# 다음 문제 버튼
+if st.session_state.answered and st.button("🔄 다음 문제"):
+    st.session_state.answered = False
+    meaning, correct_word, options = get_new_quiz()
+    st.session_state.current_meaning = meaning
+    st.session_state.correct_word = correct_word
+    st.session_state.options = options
+    st.experimental_rerun()
