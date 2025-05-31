@@ -1,8 +1,8 @@
 import streamlit as st
 import random
 import re
-import os
 import time
+from PyKorean import korean
 
 # 초성 추출 함수
 def get_chosung(word):
@@ -19,32 +19,18 @@ def get_chosung(word):
             chosung += CHOSUNG_LIST[code // 588]
     return chosung
 
-# 사전 단어 불러오기 (두부 포함)
-def load_dictionary():
-    if not os.path.exists("dictionary.txt"):
-        return []
-    with open("dictionary.txt", "r", encoding="utf-8") as file:
-        words = [line.strip() for line in file.readlines() if len(line.strip()) == 2 and re.fullmatch(r'[\uac00-\ud7a3]{2}', line.strip())]
-    return words
+# 사전 단어 불러오기 (공식 사전 기반 체크)
+def is_valid_korean_word(word):
+    return korean.check_word(word)
 
-# 초성별 사전 만들기
-def make_word_dict(dictionary):
-    word_dict = {}
-    for word in dictionary:
-        chosung = get_chosung(word)
-        if chosung not in word_dict:
-            word_dict[chosung] = []
-        word_dict[chosung].append(word)
-    return word_dict
+# 모든 가능한 2글자 초성 조합 생성 (임의 단어를 위한)
+def generate_all_chosungs():
+    CHOSUNG_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ',
+                    'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ',
+                    'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
+    return [c1 + c2 for c1 in CHOSUNG_LIST for c2 in CHOSUNG_LIST]
 
-# 단어 사전 준비
-dictionary = load_dictionary()
-word_dict = make_word_dict(dictionary)
-all_chosungs = list(word_dict.keys())
-
-if not all_chosungs:
-    st.error("⚠️ 사전에 유효한 단어가 없습니다. dictionary.txt 파일에 2글자 한글 단어를 추가해주세요.")
-    st.stop()
+all_chosungs = generate_all_chosungs()
 
 # 상태 초기화
 if "user_score" not in st.session_state:
@@ -65,7 +51,7 @@ if "start_time" not in st.session_state:
     st.session_state.start_time = time.time()
 
 # UI 타이틀
-st.title("훈민정음 초성 게임")
+st.title("훈민정음 초성 게임 (공식 사전 기반)")
 st.markdown("2글자 한국어 단어를 맞히면 점수 획득! 예: 'ㅂㅈ' → '바지'.\n10초 안에 제출하지 못하면 패배합니다.")
 
 col1, col2 = st.columns(2)
@@ -116,7 +102,7 @@ if st.session_state.user_input and not st.session_state.game_over:
         st.session_state.computer_score += 100
         st.session_state.game_over = True
         st.session_state.winner = "컴퓨터"
-    elif user_input not in dictionary:
+    elif not is_valid_korean_word(user_input):
         st.error(f"❌ '{user_input}'는 사전에 없는 단어입니다.")
         st.session_state.user_score -= 50
     else:
@@ -124,20 +110,25 @@ if st.session_state.user_input and not st.session_state.game_over:
         st.session_state.user_score += 100
         st.session_state.used_words.append(user_input)
 
-        # 컴퓨터 응답
-        comp_candidates = [
-            w for w in word_dict.get(chosung, [])
-            if w not in st.session_state.used_words and len(w) == 2
-        ]
-
-        if comp_candidates:
-            comp_word = random.choice(comp_candidates)
-            st.info(f"💻 컴퓨터 단어: `{comp_word}`")
-            st.session_state.used_words.append(comp_word)
+        # 컴퓨터 응답 (랜덤 2글자 단어 생성)
+        from random_word import RandomWords
+        rw = RandomWords()
+        attempts = 0
+        while attempts < 20:
+            try:
+                comp_word = rw.get_random_word()
+                if comp_word and len(comp_word) == 2 and get_chosung(comp_word) == chosung and comp_word not in st.session_state.used_words and is_valid_korean_word(comp_word):
+                    st.info(f"💻 컴퓨터 단어: `{comp_word}`")
+                    st.session_state.used_words.append(comp_word)
+                    break
+            except:
+                pass
+            attempts += 1
         else:
             st.warning("💻 컴퓨터가 더 이상 단어를 내지 못합니다.")
             st.session_state.user_score += 100
             st.session_state.winner = "사용자"
+
         st.session_state.game_over = True
 
     # 입력 초기화
@@ -148,6 +139,6 @@ if st.session_state.used_words:
     st.write(", ".join(st.session_state.used_words))
 
 # 실시간 새로고침 유지 조건에 따라 rerun
-if not st.session_state.game_over and remaining > 0:
+if "start_time" in st.session_state and not st.session_state.game_over and remaining > 0:
     time.sleep(1)
     st.experimental_rerun()
