@@ -19,12 +19,12 @@ def get_chosung(word):
             chosung += CHOSUNG_LIST[code // 588]
     return chosung
 
-# 사전 단어 불러오기
+# 사전 단어 불러오기 (두부 포함)
 def load_dictionary():
     if not os.path.exists("dictionary.txt"):
         return []
     with open("dictionary.txt", "r", encoding="utf-8") as file:
-        words = [line.strip() for line in file.readlines() if len(line.strip()) == 2]
+        words = [line.strip() for line in file.readlines() if len(line.strip()) == 2 and re.fullmatch(r'[\uac00-\ud7a3]{2}', line.strip())]
     return words
 
 # 초성별 사전 만들기
@@ -64,19 +64,9 @@ if "user_input" not in st.session_state:
 if "start_time" not in st.session_state:
     st.session_state.start_time = time.time()
 
-# 제한 시간 검사
-time_limit = 10
-elapsed = time.time() - st.session_state.start_time
-
-if elapsed > time_limit:
-    st.warning(f"⏰ 제한 시간 초과! ({time_limit}초)")
-    st.session_state.game_over = True
-    st.session_state.winner = "컴퓨터"
-    st.session_state.computer_score += 100
-
 # UI 타이틀
 st.title("훈민정음 초성 게임")
-st.markdown("2글자 한국어 단어를 들어맞추면 점수 획득! 제한 시간은 10초! 예: 'ㅂㅈ' → '바지'")
+st.markdown("2글자 한국어 단어를 맞히면 점수 획득! 예: 'ㅂㅈ' → '바지'.\n10초 안에 제출하지 못하면 패배합니다.")
 
 col1, col2 = st.columns(2)
 col1.metric("사용자 점수", st.session_state.user_score)
@@ -84,8 +74,17 @@ col2.metric("컴퓨터 점수", st.session_state.computer_score)
 
 chosung = st.session_state.current_chosung
 st.markdown(f"### 현재 초성: `{chosung}`")
-remaining_time = max(0, int(time_limit - elapsed))
-st.markdown(f"⏳ 남은 시간: `{remaining_time}초`")
+
+# 타이머 표시
+elapsed = time.time() - st.session_state.start_time
+remaining = max(0, 10 - int(elapsed))
+st.markdown(f"### 남은 시간: {remaining}초")
+
+if remaining <= 0 and not st.session_state.game_over:
+    st.warning("⏰ 시간 초과! 아무도 답을 제출하지 못했습니다.")
+    st.session_state.computer_score += 100
+    st.session_state.winner = "컴퓨터"
+    st.session_state.game_over = True
 
 if st.session_state.game_over:
     st.success(f"게임 종료: **{st.session_state.winner}** 승리!")
@@ -101,7 +100,7 @@ if st.session_state.game_over:
 # 사용자 입력 처리
 st.session_state.user_input = st.text_input("단어 입력 (Enter로 제출)", value=st.session_state.user_input, max_chars=10)
 
-if st.session_state.user_input:
+if st.session_state.user_input and not st.session_state.game_over:
     user_input = st.session_state.user_input.strip()
     user_chosung = get_chosung(user_input)
 
@@ -138,11 +137,8 @@ if st.session_state.user_input:
         else:
             st.warning("💻 컴퓨터가 더 이상 단어를 내지 못합니다.")
             st.session_state.user_score += 100
-            st.session_state.game_over = True
             st.session_state.winner = "사용자"
-
         st.session_state.game_over = True
-        st.session_state.start_time = time.time()
 
     # 입력 초기화
     st.session_state.user_input = ""
@@ -150,3 +146,8 @@ if st.session_state.user_input:
 if st.session_state.used_words:
     st.markdown("### 사용된 단어 목록")
     st.write(", ".join(st.session_state.used_words))
+
+# 실시간 새로고침 유지를 위한 자동 리렌더링
+if not st.session_state.game_over:
+    time.sleep(1)
+    st.experimental_rerun()
