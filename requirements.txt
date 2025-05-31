@@ -1,7 +1,1 @@
-plotly
-folium
-koreanize_matplotlib
-streamlit-folium
-
 streamlit
-random-word
