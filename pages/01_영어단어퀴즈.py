@@ -20,7 +20,7 @@ if "user_name" not in st.session_state:
 
 st.markdown(f"### 👋 안녕하세요, **{st.session_state.user_name}** 님!")
 
-# 고급 단어 리스트 (고2~수능 수준, 약 60개)
+# 고급 단어 리스트
 quiz_data = [
     {"word": "allocate", "meaning": "할당하다"},
     {"word": "ambiguous", "meaning": "모호한"},
@@ -62,7 +62,6 @@ quiz_data = [
     {"word": "utilize", "meaning": "활용하다"},
     {"word": "validate", "meaning": "입증하다"},
     {"word": "violate", "meaning": "위반하다"},
-    {"word": "allocate", "meaning": "할당하다"},
     {"word": "dedicate", "meaning": "헌신하다"},
     {"word": "justify", "meaning": "정당화하다"},
     {"word": "manipulate", "meaning": "조종하다"},
@@ -76,7 +75,6 @@ quiz_data = [
     {"word": "verify", "meaning": "검증하다"},
 ]
 
-# 문제 생성
 def get_new_quiz():
     question = random.choice(quiz_data)
     correct_word = question["word"]
@@ -102,11 +100,11 @@ try:
     if st.button("✅ 정답 확인") and not st.session_state.answered:
         st.session_state.answered = True
         if answer == st.session_state.correct_word:
-            st.success("🎉 정답입니다!")
+            st.success("🎉 정답입니다! +100점")
             st.session_state.correct_count += 1
             st.balloons()
         else:
-            st.error(f"❌ 오답입니다. 정답은 **{st.session_state.correct_word}** 입니다.")
+            st.error(f"❌ 오답입니다. 정답은 **{st.session_state.correct_word}** 입니다. -50점")
             st.session_state.wrong_count += 1
 
     if st.session_state.answered and st.button("🔄 다음 문제"):
@@ -117,7 +115,8 @@ try:
         st.session_state.options = options
         st.experimental_rerun()
 
-    st.info(f"✅ 맞힌 문제 수: {st.session_state.correct_count}  \n❌ 틀린 문제 수: {st.session_state.wrong_count}")
+    score = st.session_state.correct_count * 100 - st.session_state.wrong_count * 50
+    st.info(f"✅ 맞힌 문제 수: {st.session_state.correct_count}  \n❌ 틀린 문제 수: {st.session_state.wrong_count}  \n💯 현재 점수: {score}점")
 
     if "leaderboard" not in st.session_state:
         st.session_state.leaderboard = {}
@@ -125,7 +124,7 @@ try:
     st.session_state.leaderboard[st.session_state.user_name] = {
         "correct": st.session_state.correct_count,
         "wrong": st.session_state.wrong_count,
-        "score": st.session_state.correct_count - st.session_state.wrong_count
+        "score": score
     }
 
     st.markdown("### 🏅 실시간 사용자 랭킹")
@@ -139,7 +138,7 @@ try:
         st.write(
             f"{i}위 🧑‍🎓 **{name}**: "
             f"✅ {data['correct']} / ❌ {data['wrong']} "
-            f"(점수: {data['score']})"
+            f"(점수: {data['score']}점)"
         )
 
 except Exception:
