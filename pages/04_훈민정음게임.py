@@ -17,24 +17,36 @@ def get_chosung(word):
             chosung += CHOSUNG_LIST[code // 588]
     return chosung
 
-# 랜덤 초성 리스트
-all_chosungs = ["ㅂㅈ", "ㅇㅇ", "ㄱㅅ", "ㅈㅂ", "ㅅㅈ", "ㅁㄴ", "ㄷㅂ", "ㅊㄱ", "ㅍㄹ", "ㅎㅅ"]
+# 컴퓨터용 단어 사전 (예시)
+word_dict = {
+    "ㅂㅈ": ["바지", "보자기", "벌집", "배지"],
+    "ㅇㅇ": ["우유", "오이", "이유", "의의", "야유"],
+    "ㄱㅅ": ["감사", "급식", "간식", "가슴"],
+    "ㅈㅂ": ["자바", "지방", "준비", "제비"],
+    "ㅅㅈ": ["사진", "소주", "시작", "신전"],
+    "ㅁㄴ": ["마늘", "묵념", "만남", "미녀"],
+    "ㄷㅂ": ["도박", "당분", "덧붙", "대박"],
+    "ㅊㄱ": ["차갑", "청국", "축구", "참견"],
+    "ㅍㄹ": ["포르", "팔로", "파랑", "피뢰"],
+    "ㅎㅅ": ["항상", "한숨", "호수", "행성"]
+}
+all_chosungs = list(word_dict.keys())
 
-# 초기 상태 설정
+# 초기화
 if "round" not in st.session_state:
     st.session_state.round = 1
     st.session_state.score = 0
     st.session_state.current_chosung = random.choice(all_chosungs)
     st.session_state.used_words = []
 
-# 제목 및 설명
+# 타이틀
 st.title("🟠 훈민정음 초성 게임")
 st.write("사용자와 컴퓨터가 번갈아가며 초성에 맞는 단어를 말하는 게임입니다.")
 
 st.markdown(f"### 🕹️ 라운드 {st.session_state.round}")
 st.markdown(f"**초성:** `{st.session_state.current_chosung}`")
 
-# 🔽 폼을 사용해 Enter 키 제출 가능하게 함
+# 입력 폼
 with st.form("word_form", clear_on_submit=True):
     user_input = st.text_input("당신의 단어 입력:")
     submitted = st.form_submit_button("제출")
@@ -55,14 +67,22 @@ if submitted:
         st.session_state.score += 1
         st.session_state.used_words.append(user_input)
 
-        # 컴퓨터 차례 (가상의 단어 생성)
-        fake_word = f"{chosung}단어{random.randint(1, 999)}"
-        st.info(f"🤖 컴퓨터의 단어: `{fake_word}`")
-        st.session_state.used_words.append(fake_word)
+        # 컴퓨터 응답
+        comp_candidates = [
+            w for w in word_dict.get(chosung, [])
+            if w not in st.session_state.used_words
+        ]
 
-        # 다음 라운드로 진행
+        if comp_candidates:
+            comp_word = random.choice(comp_candidates)
+            st.info(f"🤖 컴퓨터의 단어: `{comp_word}`")
+            st.session_state.used_words.append(comp_word)
+        else:
+            st.info("🤖 컴퓨터는 더 이상 낼 단어가 없어요!")
+
+        # 다음 라운드로
         st.session_state.round += 1
         st.session_state.current_chosung = random.choice(all_chosungs)
+        st.session_state.used_words = []
 
-# 점수 출력
 st.markdown(f"### 🔢 현재 점수: {st.session_state.score}")
