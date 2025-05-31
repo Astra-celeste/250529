@@ -58,6 +58,8 @@ if "winner" not in st.session_state:
     st.session_state.winner = ""
 if "current_chosung" not in st.session_state:
     st.session_state.current_chosung = random.choice(all_chosungs)
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
 
 # UI 타이틀
 st.title("훈민정음 초성 게임")
@@ -77,13 +79,14 @@ if st.session_state.game_over:
         st.session_state.used_words = []
         st.session_state.game_over = False
         st.session_state.winner = ""
+        st.session_state.user_input = ""
     st.stop()
 
 # 사용자 입력 처리
-user_input = st.text_input("단어 입력 (Enter로 제출)", max_chars=10)
+st.session_state.user_input = st.text_input("단어 입력 (Enter로 제출)", value=st.session_state.user_input, max_chars=10)
 
-if user_input:
-    user_input = user_input.strip()
+if st.session_state.user_input:
+    user_input = st.session_state.user_input.strip()
     user_chosung = get_chosung(user_input)
 
     if not re.fullmatch(r'[\uac00-\ud7a3]{2}', user_input):
@@ -121,6 +124,9 @@ if user_input:
             st.session_state.user_score += 100
             st.session_state.game_over = True
             st.session_state.winner = "사용자"
+
+    # 입력 초기화
+    st.session_state.user_input = ""
 
 if st.session_state.used_words:
     st.markdown("### 사용된 단어 목록")
