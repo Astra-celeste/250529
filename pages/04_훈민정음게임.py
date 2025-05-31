@@ -147,7 +147,7 @@ if st.session_state.used_words:
     st.markdown("### 사용된 단어 목록")
     st.write(", ".join(st.session_state.used_words))
 
-# 실시간 새로고침 유지를 위한 자동 리렌더링
-if not st.session_state.game_over:
+# 실시간 새로고침 유지 조건에 따라 rerun
+if not st.session_state.game_over and remaining > 0:
     time.sleep(1)
     st.experimental_rerun()
