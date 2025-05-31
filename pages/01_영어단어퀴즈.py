@@ -39,33 +39,39 @@ def get_new_quiz():
     random.shuffle(options)
     return meaning, correct_word, options
 
-# 세션 상태 초기화
-if "answered" not in st.session_state:
-    st.session_state.answered = False
-if "current_meaning" not in st.session_state:
-    meaning, correct_word, options = get_new_quiz()
-    st.session_state.current_meaning = meaning
-    st.session_state.correct_word = correct_word
-    st.session_state.options = options
+# 에러 방지용 try-except로 감싸기
+try:
+    if "answered" not in st.session_state:
+        st.session_state.answered = False
+    if "current_meaning" not in st.session_state:
+        meaning, correct_word, options = get_new_quiz()
+        st.session_state.current_meaning = meaning
+        st.session_state.correct_word = correct_word
+        st.session_state.options = options
 
-# 문제 표시
-st.markdown(f"### ❓ 단어의 뜻: `{st.session_state.current_meaning}`")
-answer = st.radio("정답을 골라보세요:", st.session_state.options)
+    # 문제 표시
+    st.markdown(f"### ❓ 단어의 뜻: `{st.session_state.current_meaning}`")
+    answer = st.radio("정답을 골라보세요:", st.session_state.options)
 
-# 정답 확인 버튼
-if st.button("✅ 정답 확인") and not st.session_state.answered:
-    st.session_state.answered = True
-    if answer == st.session_state.correct_word:
-        st.success("🎉 정답입니다! 단어 실력이 대단하네요!")
-        st.balloons()
-    else:
-        st.error(f"❌ 오답입니다. 정답은 **{st.session_state.correct_word}** 입니다.")
+    # 정답 확인 버튼
+    if st.button("✅ 정답 확인") and not st.session_state.answered:
+        st.session_state.answered = True
+        if answer == st.session_state.correct_word:
+            st.success("🎉 정답입니다! 단어 실력이 대단하네요!")
+            st.balloons()
+        else:
+            st.error(f"❌ 오답입니다. 정답은 **{st.session_state.correct_word}** 입니다.")
 
-# 다음 문제 버튼
-if st.session_state.answered and st.button("🔄 다음 문제"):
-    st.session_state.answered = False
-    meaning, correct_word, options = get_new_quiz()
-    st.session_state.current_meaning = meaning
-    st.session_state.correct_word = correct_word
-    st.session_state.options = options
-    st.experimental_rerun()
+    # 다음 문제 버튼
+    if st.session_state.answered and st.button("🔄 다음 문제"):
+        st.session_state.answered = False
+        meaning, correct_word, options = get_new_quiz()
+        st.session_state.current_meaning = meaning
+        st.session_state.correct_word = correct_word
+        st.session_state.options = options
+        st.experimental_rerun()
+
+except Exception as e:
+    st.warning("⚠️ 문제가 발생했지만 앱은 계속 작동 중입니다.")
+    # 개발 중에는 아래 주석을 풀면 콘솔에 에러 내용 확인 가능
+    # st.text(f"디버그용 에러 내용: {e}")
