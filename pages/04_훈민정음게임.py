@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import re
+import time
 
 # 초성 추출 함수
 def get_chosung(word):
@@ -17,7 +18,7 @@ def get_chosung(word):
             chosung += CHOSUNG_LIST[code // 588]
     return chosung
 
-# 컴퓨터용 단어 사전
+# 단어 사전
 word_dict = {
     "ㅂㅈ": ["바지", "보자", "벌집"],
     "ㅇㅇ": ["우유", "오이", "이유", "의의", "야유"],
@@ -40,6 +41,7 @@ if "user_score" not in st.session_state:
     st.session_state.used_words = []
     st.session_state.game_over = False
     st.session_state.winner = ""
+    st.session_state.start_time = time.time()
 
 # 타이틀
 st.title("🎯 훈민정음 초성 게임")
@@ -54,7 +56,20 @@ col2.metric("🤖 컴퓨터 점수", st.session_state.computer_score)
 chosung = st.session_state.current_chosung
 st.markdown(f"### 🧩 현재 초성: `{chosung}`")
 
-# 라운드 종료 확인
+# 타이머
+elapsed = time.time() - st.session_state.start_time
+remaining = max(0, 10 - int(elapsed))
+st.markdown(f"⏱️ 남은 시간: `{remaining}초`")
+
+# 시간 초과 확인
+if remaining <= 0 and not st.session_state.game_over:
+    st.error("⏰ 시간 초과! 컴퓨터 승리입니다.")
+    st.session_state.computer_score += 100
+    st.session_state.game_over = True
+    st.session_state.winner = "🤖 컴퓨터"
+    st.stop()
+
+# 라운드 종료
 if st.session_state.game_over:
     st.success(f"🏁 이번 라운드 승자는 **{st.session_state.winner}**입니다!")
     if st.button("🔁 다음 초성으로 시작"):
@@ -62,11 +77,13 @@ if st.session_state.game_over:
         st.session_state.used_words = []
         st.session_state.game_over = False
         st.session_state.winner = ""
+        st.session_state.start_time = time.time()
+        st.experimental_rerun()
     st.stop()
 
 # 사용자 입력
 with st.form("word_form", clear_on_submit=True):
-    user_input = st.text_input("단어 입력 (한글 두 글자):", max_chars=10)
+    user_input = st.text_input("단어 입력 (한글 두 글자):", max_chars=2)
     submitted = st.form_submit_button("제출")
 
 if submitted and not st.session_state.game_over:
@@ -106,7 +123,10 @@ if submitted and not st.session_state.game_over:
             st.session_state.game_over = True
             st.session_state.winner = "😊 사용자"
 
-# 사용된 단어 출력
+# 사용된 단어 목록
 if st.session_state.used_words:
     st.markdown("### 📚 사용된 단어 목록")
     st.write(", ".join(st.session_state.used_words))
+
+# 자동 새로고침 (1초마다)
+st.experimental_rerun()
