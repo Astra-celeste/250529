@@ -2,6 +2,7 @@ import streamlit as st
 import random
 import re
 import os
+import time
 
 # 초성 추출 함수
 def get_chosung(word):
@@ -60,10 +61,22 @@ if "current_chosung" not in st.session_state:
     st.session_state.current_chosung = random.choice(all_chosungs)
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
+if "start_time" not in st.session_state:
+    st.session_state.start_time = time.time()
+
+# 제한 시간 검사
+time_limit = 10
+elapsed = time.time() - st.session_state.start_time
+
+if elapsed > time_limit:
+    st.warning(f"⏰ 제한 시간 초과! ({time_limit}초)")
+    st.session_state.game_over = True
+    st.session_state.winner = "컴퓨터"
+    st.session_state.computer_score += 100
 
 # UI 타이틀
 st.title("훈민정음 초성 게임")
-st.markdown("2글자 한국어 단어를 들어맞추면 점수 획득! 예: 'ㅂㅈ' → '바지'")
+st.markdown("2글자 한국어 단어를 들어맞추면 점수 획득! 제한 시간은 10초! 예: 'ㅂㅈ' → '바지'")
 
 col1, col2 = st.columns(2)
 col1.metric("사용자 점수", st.session_state.user_score)
@@ -71,6 +84,8 @@ col2.metric("컴퓨터 점수", st.session_state.computer_score)
 
 chosung = st.session_state.current_chosung
 st.markdown(f"### 현재 초성: `{chosung}`")
+remaining_time = max(0, int(time_limit - elapsed))
+st.markdown(f"⏳ 남은 시간: `{remaining_time}초`")
 
 if st.session_state.game_over:
     st.success(f"게임 종료: **{st.session_state.winner}** 승리!")
@@ -80,6 +95,7 @@ if st.session_state.game_over:
         st.session_state.game_over = False
         st.session_state.winner = ""
         st.session_state.user_input = ""
+        st.session_state.start_time = time.time()
     st.stop()
 
 # 사용자 입력 처리
@@ -124,6 +140,9 @@ if st.session_state.user_input:
             st.session_state.user_score += 100
             st.session_state.game_over = True
             st.session_state.winner = "사용자"
+
+        st.session_state.game_over = True
+        st.session_state.start_time = time.time()
 
     # 입력 초기화
     st.session_state.user_input = ""
