@@ -1,6 +1,7 @@
 import streamlit as st
 import folium
-from streamlit.components.v1 import components
+from streamlit.components.v1 import html
+import os
 
 # 여행지 데이터
 travel_spots = [
@@ -22,7 +23,7 @@ st.set_page_config(page_title="TOP 10 한국 여행지", layout="wide")
 st.title("🇰🇷 한국인이 사랑하는 TOP 10 여행지")
 st.markdown("아래 지도에서 여행지를 클릭하면 간단한 설명을 확인할 수 있습니다.")
 
-# 선택된 여행지 필터
+# 사이드바 선택
 selected_spot = st.sidebar.selectbox("여행지 선택", ["전체 보기"] + [spot["name"] for spot in travel_spots])
 
 # 중심 좌표 계산
@@ -32,7 +33,6 @@ center_lon = sum(spot["lon"] for spot in travel_spots) / len(travel_spots)
 # 지도 생성
 m = folium.Map(location=[center_lat, center_lon], zoom_start=7)
 
-# 마커 추가
 for spot in travel_spots:
     if selected_spot == "전체 보기" or spot["name"] == selected_spot:
         folium.Marker(
@@ -42,12 +42,20 @@ for spot in travel_spots:
             icon=folium.Icon(color="blue", icon="info-sign")
         ).add_to(m)
 
-# 지도 출력
-folium_html = m._repr_html_()
-components.html(folium_html, height=600)
+# HTML 파일로 저장 후 읽기
+map_file = "map.html"
+m.save(map_file)
 
-# 선택된 여행지 소개
+with open(map_file, "r", encoding="utf-8") as f:
+    map_html = f.read()
+
+html(map_html, height=600)
+
+# 설명 출력
 if selected_spot != "전체 보기":
     spot_info = next(item for item in travel_spots if item["name"] == selected_spot)
     st.subheader(f"📍 {spot_info['name']}")
     st.write(spot_info["desc"])
+
+# 파일 삭제는 선택사항
+os.remove(map_file)
