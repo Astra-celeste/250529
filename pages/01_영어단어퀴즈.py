@@ -1,28 +1,28 @@
 import streamlit as st
 import random
 
-st.set_page_config(page_title="고1 영어 단어 퀴즈", page_icon="📚")
+st.set_page_config(page_title="고급 영어 단어 퀴즈", page_icon="📖")
 
-st.title("📚 고1 영어 단어 퀴즈")
+st.title("📖 고급 영어 단어 퀴즈")
 st.subheader("뜻을 보고 알맞은 영어 단어를 골라보세요!")
 
-# 고1 수준 영어 단어 데이터
+# 고2~고3 수준 영어 단어 데이터
 quiz_data = [
-    {"word": "analyze", "meaning": "분석하다"},
-    {"word": "culture", "meaning": "문화"},
-    {"word": "confident", "meaning": "자신감 있는"},
-    {"word": "effort", "meaning": "노력"},
-    {"word": "explain", "meaning": "설명하다"},
-    {"word": "solution", "meaning": "해결책"},
-    {"word": "variety", "meaning": "다양성"},
-    {"word": "opinion", "meaning": "의견"},
-    {"word": "curious", "meaning": "호기심 많은"},
-    {"word": "develop", "meaning": "발전시키다"},
-    {"word": "behavior", "meaning": "행동"},
-    {"word": "opportunity", "meaning": "기회"},
-    {"word": "responsibility", "meaning": "책임"},
-    {"word": "technology", "meaning": "기술"},
-    {"word": "environment", "meaning": "환경"}
+    {"word": "allocate", "meaning": "할당하다"},
+    {"word": "comprehensive", "meaning": "포괄적인"},
+    {"word": "consequence", "meaning": "결과"},
+    {"word": "contradict", "meaning": "모순되다"},
+    {"word": "credible", "meaning": "믿을 수 있는"},
+    {"word": "deficiency", "meaning": "결핍"},
+    {"word": "emphasize", "meaning": "강조하다"},
+    {"word": "hypothesis", "meaning": "가설"},
+    {"word": "interpret", "meaning": "해석하다"},
+    {"word": "negotiate", "meaning": "협상하다"},
+    {"word": "plausible", "meaning": "그럴듯한"},
+    {"word": "substantial", "meaning": "상당한"},
+    {"word": "sustainable", "meaning": "지속 가능한"},
+    {"word": "terminate", "meaning": "종결시키다"},
+    {"word": "utilize", "meaning": "활용하다"}
 ]
 
 # 새로운 문제 불러오기
@@ -30,14 +30,13 @@ def get_new_quiz():
     question = random.choice(quiz_data)
     correct_word = question["word"]
     meaning = question["meaning"]
-    
+
     options = [correct_word]
     while len(options) < 4:
         choice = random.choice(quiz_data)["word"]
         if choice not in options:
             options.append(choice)
     random.shuffle(options)
-    
     return meaning, correct_word, options
 
 # 세션 상태 초기화
@@ -57,7 +56,7 @@ answer = st.radio("정답을 골라보세요:", st.session_state.options)
 if st.button("✅ 정답 확인") and not st.session_state.answered:
     st.session_state.answered = True
     if answer == st.session_state.correct_word:
-        st.success("🎉 정답입니다! 잘했어요!")
+        st.success("🎉 정답입니다! 단어 실력이 대단하네요!")
         st.balloons()
     else:
         st.error(f"❌ 오답입니다. 정답은 **{st.session_state.correct_word}** 입니다.")
