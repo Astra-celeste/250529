@@ -4,5 +4,4 @@ koreanize_matplotlib
 streamlit-folium
 
 streamlit
-PyKorean
 random-word
