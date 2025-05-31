@@ -2,7 +2,10 @@ import streamlit as st
 import random
 import re
 import time
-from PyKorean import korean
+from konlpy.tag import Okt
+from random_word import RandomWords
+
+okt = Okt()
 
 # 초성 추출 함수
 def get_chosung(word):
@@ -19,11 +22,14 @@ def get_chosung(word):
             chosung += CHOSUNG_LIST[code // 588]
     return chosung
 
-# 사전 단어 불러오기 (공식 사전 기반 체크)
+# 단어 유효성 검사 (2글자 명사 등)
 def is_valid_korean_word(word):
-    return korean.check_word(word)
+    if len(word) != 2:
+        return False
+    morphs = okt.pos(word, norm=True, stem=True)
+    return any(pos == 'Noun' for _, pos in morphs)
 
-# 모든 가능한 2글자 초성 조합 생성 (임의 단어를 위한)
+# 모든 가능한 2글자 초성 조합 생성
 def generate_all_chosungs():
     CHOSUNG_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ',
                     'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ',
@@ -110,8 +116,7 @@ if st.session_state.user_input and not st.session_state.game_over:
         st.session_state.user_score += 100
         st.session_state.used_words.append(user_input)
 
-        # 컴퓨터 응답 (랜덤 2글자 단어 생성)
-        from random_word import RandomWords
+        # 컴퓨터 응답 (랜덤 단어 생성)
         rw = RandomWords()
         attempts = 0
         while attempts < 20:
